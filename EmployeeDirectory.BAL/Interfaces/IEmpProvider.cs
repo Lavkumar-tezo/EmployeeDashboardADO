@@ -11,13 +11,12 @@ namespace EmployeeDirectory.BAL.Interfaces
 
         public bool IsEmployeePresent(string id);
 
-        public DateOnly ConvertIntoDate(string input);
+        public DateTime ConvertIntoDate(string input);
 
         public Employee AssignValueToModel(DTO.Employee emp);
 
-        public List<DAL.Models.Role> GetRoles();
-
         public string GenerateEmpId();
+
         public void UpdateEmployee(DTO.Employee employee);
 
         public void DeleteEmployee(string id);

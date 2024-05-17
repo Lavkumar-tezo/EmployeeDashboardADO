@@ -8,11 +8,11 @@
 
         public string Email { get; set; }
 
-        DateOnly JoinDate { get; set; }
+        public DateTime JoinDate { get; set; }
+
+        public string Department {  get; set; }
 
         public string Location { get; set; }
-
-        public string Department { get; set; }
 
         public string JobTitle { get; set; }
     }

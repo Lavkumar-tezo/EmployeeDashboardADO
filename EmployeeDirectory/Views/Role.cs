@@ -5,11 +5,12 @@ using EmployeeDirectory.BAL.Interfaces.Views;
 using EmployeeDirectory.BAL.Interfaces;
 namespace EmployeeDirectory.Views
 {
-    public class Role(IValidator validator, IRoleProvider role, IGetProperty prop) : IRoleView
+    public class Role(IValidator validator, IRoleProvider role, IGetProperty prop,IGetProjectDeptList list) : IRoleView
     {
         private readonly IValidator _validator = validator;
         private readonly IRoleProvider _roleProvider = role;
         private readonly IGetProperty _getProperty = prop;
+        private readonly IGetProjectDeptList _projectDeptList = list;
 
         public void ShowRoleMenu()
         {
@@ -49,14 +50,22 @@ namespace EmployeeDirectory.Views
                 List<string> inputFields = _getProperty.GetProperties("Role");
                 bool isAllInputCorrect = true;
 
-                Printer.Print(true, "Enter the details of New Role (* represents required fields)");
+
                 do
                 {
                     foreach (var inputName in inputFields)
                     {
                         if (MessagesInputStore.validationMessages.ContainsKey(inputName) || isAllInputCorrect)
                         {
-                            Printer.Print(false, inputName);
+                            if (inputName.Equals("Department"))
+                            {
+                                Dictionary<string, string> list = _projectDeptList.GetList(inputName);
+                                string message = "Available Department : ";
+                                message += string.Join(", ", list.Values);
+                                message += "  -- Write full department name";
+                                Printer.Print(true, message);
+                            }
+                            Printer.Print(false, $"{inputName} : ");
                             MessagesInputStore.inputFieldValues[inputName] = Console.ReadLine() ?? "";
                         }
                     }
@@ -74,7 +83,7 @@ namespace EmployeeDirectory.Views
                 MessagesInputStore.inputFieldValues.Clear();
                 Printer.Print(true, "Role Added");
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
                 Printer.Print(true, ex.Message);
             }
@@ -98,7 +107,7 @@ namespace EmployeeDirectory.Views
                     }
                 }
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
                 Printer.Print(true, ex.Message);
             }

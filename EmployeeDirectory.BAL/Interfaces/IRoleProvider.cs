@@ -8,5 +8,7 @@ namespace EmployeeDirectory.BAL.Interfaces
         public string GenerateRoleId();
 
         public List<Role> GetRoles();
+
+        public List<Role> GetRolesByDept(string deptId);
     }
 }

@@ -5,80 +5,105 @@ using EmployeeDirectory.BAL.Interfaces;
 using EmployeeDirectory.BAL.Helper;
 using EmployeeDirectory.BAL.Extension;
 using Employee = EmployeeDirectory.DAL.Models.Employee;
+using EmployeeDirectory.DAL.Models;
 
 namespace EmployeeDirectory.BAL.Providers
 {
-    public class EmployeeProvider(IDataProvider data, IGetProperty prop) : IEmpProvider
+    public class EmployeeProvider(IGetProperty prop, IEmployeeOperations employeeOperations,IGetProjectDeptList list,IRoleProvider role) : IEmpProvider
     {
-        private readonly IDataProvider _dataOperations = data;
         private readonly IGetProperty _getProperty = prop;
         private static int employeeIndex;
-        private static string employeeId = "";
+        public static string employeeId = "";
+        public static string deptId = "";
+        private readonly IEmployeeOperations _employeeOperations=employeeOperations;
+        private readonly IGetProjectDeptList _employeeDeptList=list;
+        private readonly IRoleProvider _role = role;
 
         public DTO.Employee AddValueToEmp(Dictionary<string, string> values, string mode)
         {
-            if (mode == "Add")
+            if (mode.Equals("Add"))
             {
-                DateOnly joinDate = ConvertIntoDate(values["JoinDate"]);
                 DTO.Employee newEmp = new()
                 {
                     FirstName = values["FirstName"],
                     LastName = values["LastName"],
                     Email = values["Email"],
-                    JoinDate = joinDate,
+                    JoinDate = DateTime.Parse(values["JoinDate"]),
                     Location = values["Location"],
                     JobTitle = values["JobTitle"],
-                    Department = values["Department"],
                     Manager = values["Manager"],
                     Mobile = values["Mobile"],
-                    Project = values["Project"]
+                    Project = values["Project"],
+                    Department = values["Department"],
+                    DOB = (values["DOB"] != null) ? DateTime.Parse(values["DOB"]) : DateTime.Now
                 };
-                DateOnly dob = ConvertIntoDate(values["DOB"]);
-                if (dob != DateOnly.MinValue)
-                {
-                    newEmp.DOB = dob;
-                }
                 return newEmp;
             }
             else
             {
-                (bool check, dynamic emp) = GetEmployeeById(values["Id"]);
-                if (check)
+                (bool check,Employee emp) = GetEmployeeById(values["Id"]);
+                AssignIdToKeys(emp);
+                DTO.Employee updateEmp = new()
                 {
-                    DateOnly dob = ConvertIntoDate(values["JoinDate"]);
-                    DTO.Employee updateEmp = new()
-                    {
-                        FirstName = (values["FirstName"].IsEmpty()) ? emp.FirstName : values["FirstName"],
-                        LastName = (values["LastName"].IsEmpty()) ? emp.LastName : values["LastName"],
-                        Location = (values["Location"].IsEmpty()) ? emp.Location : values["Location"],
-                        Email = (values["Email"].IsEmpty()) ? emp.Email : values["Email"],
-                        JobTitle = (values["JobTitle"].IsEmpty()) ? emp.JobTitle : values["JobTitle"],
-                        Department = (values["Department"].IsEmpty()) ? emp.Department : values["Department"],
-                        Manager = (values["Manager"].IsEmpty()) ? emp.Manager : values["Manager"],
-                        Project = (values["Project"].IsEmpty()) ? emp.Project : values["Project"],
-                        JoinDate = dob,
-                    };
-                    dob = ConvertIntoDate(values["DOB"]);
-                    if (dob != DateOnly.MinValue)
-                    {
-                        updateEmp.DOB = dob;
-                    }
-                    return updateEmp;
+                    FirstName = (values["FirstName"].IsEmpty()) ? emp.FirstName : values["FirstName"],
+                    LastName = (values["LastName"].IsEmpty()) ? emp.LastName : values["LastName"],
+                    Location = (values["Location"].IsEmpty()) ? emp.Location : values["Location"],
+                    Email = (values["Email"].IsEmpty()) ? emp.Email : values["Email"],
+                    JobTitle = (values["JobTitle"].IsEmpty()) ? emp.JobTitle : values["JobTitle"],
+                    Manager = (values["Manager"].IsEmpty()) ? emp.Manager : values["Manager"],
+                    Project = (values["Project"].IsEmpty()) ? emp.Project : values["Project"],
+                    JoinDate = (values["JoinDate"].IsEmpty()) ? emp.JoinDate : DateTime.Parse(values["JoinDate"]),
+                    Department = (values["Department"].IsEmpty()) ? emp.Department : values["Department"],
+                    Mobile = (values["Mobile"]).IsEmpty()? emp.Mobile : values["Mobile"],
+                    DOB=(values["DOB"].IsEmpty())? emp.DOB:DateTime.Parse(values["DOB"])
+                };
+                if (!values["DOB"].IsEmpty())
+                {
+                    updateEmp.DOB = DateTime.Parse(values["DOB"]);
+                }
+                else if(!emp.DOB.HasValue)
+                {
+                    updateEmp.DOB = DateTime.Now;
                 }
                 else
                 {
-                    return emp;
+                    updateEmp.DOB = emp.DOB;
                 }
+                return updateEmp;
             }
         }
 
-        public DateOnly ConvertIntoDate(string input)
+        public void AssignIdToKeys(Employee emp)
         {
-            if (DateOnly.TryParseExact(input, "dd/MM/yyyy", null, DateTimeStyles.None, out DateOnly result))
+            Dictionary<string, string> deptList = _employeeDeptList.GetList("Department");
+            Dictionary<string, string> projectList = _employeeDeptList.GetList("Project");
+            if (emp.Project !=null)
             {
-                return result;
+                emp.Project = projectList.FirstOrDefault(x=> x.Value.Equals(emp.Project)).Key;
             }
-            return DateOnly.MinValue;
+            emp.Department = deptList.FirstOrDefault(x => x.Value.Equals(emp.Department)).Key;
+            List<Role> roles = _role.GetRolesByDept(emp.Department);
+            foreach (Role role in roles)
+            {
+                if (emp.JobTitle.Equals(role.Name))
+                {
+                    emp.JobTitle = role.Id;
+                }
+            }
+
+        }
+
+        public DateTime ConvertIntoDate(string input)
+        {
+            DateTime date;
+            if (DateTime.TryParseExact(input, "dd/MM/yyyy", null, DateTimeStyles.None, out date))
+            {
+                return date;
+            }
+            else
+            {
+                return DateTime.MinValue;
+            }
         }
 
         public Employee AssignValueToModel(DTO.Employee emp)
@@ -93,8 +118,8 @@ namespace EmployeeDirectory.BAL.Providers
                 FirstName = emp.FirstName,
                 LastName = emp.LastName,
                 Location = emp.Location,
-                Department = emp.Department,
                 Project = emp.Project,
+                Department=emp.Department,
                 Manager = emp.Manager,
                 JoinDate = emp.JoinDate,
                 DOB = emp.DOB,
@@ -109,9 +134,9 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                _dataOperations.AddEmployee(AssignValueToModel(employee));
+               _employeeOperations.AddEmployee(AssignValueToModel(employee));
             }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }
@@ -121,7 +146,7 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                return _dataOperations.GetEmployees();
+               return _employeeOperations.GetEmployees();
             }
             catch (IOException)
             {
@@ -140,15 +165,16 @@ namespace EmployeeDirectory.BAL.Providers
                 if (employeeIndex != -1)
                 {
                     employeeId = employeeList[employeeIndex].Id;
+                    deptId = employeeList[employeeIndex].Department;
                     return (true, employeeList[employeeIndex]);
                 }
                 throw new EmpNotFound("Employee Not found with given Id");
             }
-            catch (IOException)
+            catch (EmpNotFound)
             {
                 throw;
             }
-            catch (EmpNotFound)
+            catch (Exception)
             {
                 throw;
             }
@@ -159,18 +185,15 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                (bool check, dynamic employee) = GetEmployeeById(id);
-                if (check)
-                {
-                    MessagesInputStore.inputFieldValues = _getProperty.GetValueFromObject(employee);
-                }
+                (bool check, Employee employee) = GetEmployeeById(id);
+                MessagesInputStore.inputFieldValues=_getProperty.GetValueFromObject(employee);
                 return check;
             }
             catch (EmpNotFound)
             {
                 throw;
             }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }
@@ -181,8 +204,7 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                _dataOperations.UpdateEmployee(AssignValueToModel(employee), employeeIndex);
-                employeeId = "";
+                _employeeOperations.UpdateEmployee(AssignValueToModel(employee));
             }
             catch (IOException)
             {
@@ -195,22 +217,9 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                _dataOperations.DeleteEmployee(id);
+               _employeeOperations.DeleteEmployee(id);
             }
-            catch (IOException)
-            {
-                throw;
-            }
-
-        }
-
-        public List<DAL.Models.Role> GetRoles()
-        {
-            try
-            {
-                return _dataOperations.GetRoles();
-            }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }
@@ -221,14 +230,18 @@ namespace EmployeeDirectory.BAL.Providers
         {
             try
             {
-                List<Employee> employees = _dataOperations.GetEmployees();
+                List<Employee> employees = _employeeOperations.GetEmployees();
+                if(employees.Count==0)
+                {
+                    return "TZ0001";
+                }
                 string LastEmpId = employees.Last().Id;
                 int lastEmpNumber = int.Parse(LastEmpId[2..]);
                 lastEmpNumber++;
                 string newId = "TZ" + lastEmpNumber.ToString("D4");
                 return newId;
             }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }

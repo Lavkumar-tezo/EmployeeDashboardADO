@@ -9,11 +9,11 @@ namespace EmployeeDirectory.BAL.DTO
 
         public required string Email { get; set; }
 
-        public required DateOnly JoinDate { get; set; }
-
-        public required string Location { get; set; }
+        public required DateTime JoinDate { get; set; }
 
         public required string Department { get; set; }
+
+        public required string Location { get; set; }
 
         public required string JobTitle { get; set; }
 
@@ -21,7 +21,7 @@ namespace EmployeeDirectory.BAL.DTO
 
         public string? Mobile { get; set; }
 
-        public DateOnly? DOB { get; set; }
+        public DateTime? DOB { get; set; }
 
         public string? Manager { get; set; }
     }

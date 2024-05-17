@@ -13,7 +13,7 @@ namespace EmployeeDirectory.BAL.Providers
             }
             else
             {
-                return typeof(Employee).GetProperties().Select(prop => prop.Name).ToList();
+                return typeof(Role).GetProperties().Select(prop => prop.Name).ToList();
             }
         }
 

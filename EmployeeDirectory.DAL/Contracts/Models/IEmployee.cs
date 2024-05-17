@@ -10,7 +10,7 @@
 
         public string Email { get; set; }
 
-        DateOnly JoinDate { get; set; }
+        public DateTime JoinDate { get; set; }
 
         public string Location { get; set; }
 

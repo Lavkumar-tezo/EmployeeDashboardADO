@@ -23,12 +23,5 @@ namespace EmployeeDirectory.Helpers
             }
         }
 
-        public static void PrintInputField(string fieldName, string prevValue = "")
-        {
-            Console.Write($"{fieldName}");
-            string message = prevValue.IsEmpty() ? " : " : $" (Previous Value: {prevValue})";
-            Console.Write(message);
-        }
-
     }
 }

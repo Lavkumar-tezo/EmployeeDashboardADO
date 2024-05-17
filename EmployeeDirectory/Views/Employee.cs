@@ -3,13 +3,16 @@ using EmployeeDirectory.BAL.Helper;
 using EmployeeDirectory.Helpers;
 using EmployeeDirectory.BAL.Interfaces;
 using EmployeeDirectory.BAL.Interfaces.Views;
+using EmployeeDirectory.DAL.Models;
 namespace EmployeeDirectory.Views
 {
-    internal class Employee(IValidator validator, IEmpProvider emp, IGetProperty prop) : IEmployeeView
+    internal class Employee(IValidator validator,IRoleProvider role, IEmpProvider emp, IGetProperty prop,IGetProjectDeptList list) : IEmployeeView
     {
         private readonly IValidator _validator = validator;
         private readonly IEmpProvider _employee = emp;
+        private readonly IRoleProvider _role = role;
         private readonly IGetProperty _getProperty = prop;
+        private readonly IGetProjectDeptList _getProjectDeptList=list;
 
         public void ShowEmployeeMenu()
         {
@@ -66,8 +69,26 @@ namespace EmployeeDirectory.Views
                 {
                     if (MessagesInputStore.validationMessages.ContainsKey(inputName) || isAllInputCorrect)
                     {
-                        string prevValue = MessagesInputStore.inputFieldValues.TryGetValue(inputName, out string? value) ? value : "";
-                        Printer.PrintInputField(inputName, prevValue);
+                        if (inputName.Equals("Department") || inputName.Equals("Project"))
+                        {
+                            Dictionary<string, string> list = _getProjectDeptList.GetList(inputName);
+                            string message = $"Available {inputName} : ";
+                            message += string.Join(", ", list.Values);
+                            message += $" -- Write full {inputName} name";
+                            Printer.Print(true, message);
+                        }
+                        else if (inputName.Equals("JobTitle"))
+                        {
+                            List<DAL.Models.Role> list = _role.GetRoles();
+                            string message = $"JobTitle - select among these -- ";
+                            foreach (var role in list)
+                            {
+                                message += role.Name+", ";
+                            }
+                            message += $" -- Write full {inputName} name";
+                            Printer.Print(true, message);
+                        }
+                        Printer.Print(false, $"{inputName} : ");
                         MessagesInputStore.inputFieldValues[inputName] = Console.ReadLine() ?? "";
                     }
                 }
@@ -90,7 +111,7 @@ namespace EmployeeDirectory.Views
         {
             try
             {
-                List<DAL.Models.Role> roleList = _employee.GetRoles();
+                List<DAL.Models.Role> roleList = _role.GetRoles();
                 if (roleList.Count == 0)
                 {
                     Printer.Print(true, "Add a new role First");
@@ -158,7 +179,7 @@ namespace EmployeeDirectory.Views
 
         public void DisplayEmployee(DAL.Models.Employee emp)
         {
-            Printer.Print(true, $"Emp Id: {emp.Id} -- Full Name: {emp.FirstName} {emp.LastName} -- Role: {emp.JobTitle} --  Department: {emp.Department} -- Location: {emp.Location} -- JoiningDate: {emp.JoinDate} -- Manager: {emp.Manager} -- Project: {emp.Project}");
+            Printer.Print(true, $"Emp Id: {emp.Id} -- Full Name: {emp.FirstName} {emp.LastName} -- Department: {emp.Department} -- Role: {emp.JobTitle} -- Email: {emp.Email} -- Location: {emp.Location} -- JoiningDate: {emp.JoinDate} -- Manager: {emp.Manager} -- Project: {emp.Project} -- DOB: {emp.DOB} -- Mobile: {emp.Mobile}");
         }
 
         public void DisplaySelectedEmp()

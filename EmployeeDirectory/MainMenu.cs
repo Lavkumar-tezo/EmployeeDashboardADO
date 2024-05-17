@@ -13,7 +13,6 @@ namespace EmployeeDirectory
         {
             int input;
             bool isValidInput;
-            //IServiceProvider serviceProvider = ConfigureServices.BuildServices();
 
             Printer.Print(true, "-----------------Welcome to Employee Directory-----------------");
             do
@@ -33,13 +32,10 @@ namespace EmployeeDirectory
                     {
                         case 1:
                             isValidInput = false;
-                            //Views.Employee emp;
-                            //Views.Employee emp = new();
                             emp.ShowEmployeeMenu();
                             break;
                         case 2:
                             isValidInput = false;
-                           // Views.Role role = new();
                             role.ShowRoleMenu();
                             break;
                         default:

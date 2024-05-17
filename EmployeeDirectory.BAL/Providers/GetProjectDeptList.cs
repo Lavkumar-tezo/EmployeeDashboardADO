@@ -1,37 +1,22 @@
 ﻿using EmployeeDirectory.BAL.Interfaces;
-using System.Text.Json;
 using EmployeeDirectory.DAL.Contracts.Providers;
+using EmployeeDirectory.DAL.Models;
 namespace EmployeeDirectory.BAL.Providers
 {
-    public class GetProjectDeptList(IDataProvider data) : IGetProjectDeptList
+    public class GetProjectDeptList(IDeptProjectOperations data):IGetProjectDeptList
     {
-        private readonly IDataProvider _dataOperations = data;
+        private readonly IDeptProjectOperations _deptProjectOperations = data;
 
-        /// <summary>
-        /// Gets the static data for department or project.
-        /// </summary>
-        /// <param name="input"></param>
-        /// <returns>List of Department or Project</returns>
-        public string[] GetStaticData(string input)
+        public Dictionary<string, string> GetList(string tableName)
         {
             try
             {
-                Dictionary<string, string[]> list = _dataOperations.GetProjectDepartment();
-                return list[input];
+                return _deptProjectOperations.GetDepartments(tableName);
             }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }
-            catch (JsonException)
-            {
-                throw;
-            }
-            catch (KeyNotFoundException)
-            {
-                throw;
-            }
-
         }
     }
 }

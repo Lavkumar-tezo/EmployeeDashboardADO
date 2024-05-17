@@ -3,9 +3,9 @@ using EmployeeDirectory.DAL.Models;
 using EmployeeDirectory.DAL.Contracts.Providers;
 namespace EmployeeDirectory.BAL.Providers
 {
-    public class RoleProvider(IDataProvider data) : IRoleProvider, IComparer<Role>
+    public class RoleProvider(IRoleOperations data) : IRoleProvider
     {
-        private readonly IDataProvider _dataOperations = data;
+        private readonly IRoleOperations _roleOperations = data;
 
         public void AddRole(Dictionary<string, string> inputs)
         {
@@ -17,15 +17,18 @@ namespace EmployeeDirectory.BAL.Providers
                 Description = inputs["Description"],
                 Id = GenerateRoleId()
             };
-            _dataOperations.AddRole(role);
+            _roleOperations.AddRole(role);
         }
 
         public string GenerateRoleId()
         {
             try
             {
-                List<Role> roles = _dataOperations.GetRoles();
-                roles.Sort(Compare);
+                List<Role> roles = _roleOperations.GetRoles();
+                if (roles.Count == 0)
+                {
+                    return "IN001";
+                }
                 string LastRoleId = roles[^1].Id ?? "";
                 int lastRoleNumber = int.Parse(LastRoleId[2..]);
                 lastRoleNumber++;
@@ -36,28 +39,31 @@ namespace EmployeeDirectory.BAL.Providers
             {
                 throw;
             }
-            catch (IOException)
+            catch (Exception)
             {
                 throw;
             }
-        }
-
-        public int Compare(Role? x, Role? y)
-        {
-            if (x != null && y != null)
-            {
-                return x.Id.CompareTo(y.Id);
-            }
-            return 0;
         }
 
         public List<Role> GetRoles()
         {
             try
             {
-                return _dataOperations.GetRoles();
+                return _roleOperations.GetRoles();
             }
-            catch (IOException)
+            catch (Exception)
+            {
+                throw;
+            }
+        }
+
+        public List<Role> GetRolesByDept(string deptId)
+        {
+            try
+            {
+                return _roleOperations.GetRolesByDept(deptId);
+            }
+            catch (Exception)
             {
                 throw;
             }
