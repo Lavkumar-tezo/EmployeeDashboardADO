@@ -148,17 +148,23 @@ namespace EmployeeDirectory.BAL.Validators
                 return (false, "Role name Should contains Alphabets only");
             }
             value = value.Trim().ToLower();
+            if(MessagesInputStore.validationMessages.ContainsKey("Department"))
+            {
+                return (false, "select valid department first for adding role");
+            }
             try
             {
-                List<DAL.Models.Role> roles = _role.GetRoles();
+                // _role.GetRolesByDept(deptId);
+                //List<DAL.Models.Role> roles = _role.GetRoles();
+                List<Role> roles = _role.GetRolesByDept(MessagesInputStore.inputFieldValues["Department"]);
                 roles = (from role in roles where role.Name.ToLower().Equals(value) select role).ToList();
                 if (roles.Count > 0)
                 {
-                    if (MessagesInputStore.inputFieldValues.ContainsKey("JobTitle"))
-                    {
-                        MessagesInputStore.inputFieldValues["JobTitle"] = roles[0].Id;
-                    }
-                    return (false, "This role already exists");
+                    //if (MessagesInputStore.inputFieldValues.ContainsKey("JobTitle"))
+                    //{
+                    //    MessagesInputStore.inputFieldValues["JobTitle"] = roles[0].Id;
+                    //}
+                    return (false, "This role already exists in selected department");
                 }
                 return (true, "Role available");
             }
