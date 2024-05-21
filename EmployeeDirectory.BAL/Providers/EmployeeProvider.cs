@@ -14,7 +14,6 @@ namespace EmployeeDirectory.BAL.Providers
         private readonly IGetProperty _getProperty = prop;
         private static int _employeeIndex;
         private static string _employeeId = "";
-        public static string deptId = "";
         private readonly IEmployeeRepository _employeeOperations =employeeOperations;
         private readonly IGetProjectDeptList _employeeDeptList=list;
         private readonly IRoleProvider _role = role;
@@ -148,7 +147,7 @@ namespace EmployeeDirectory.BAL.Providers
             if (_employeeIndex != -1)
             {
                 _employeeId = employeeList[_employeeIndex].Id;
-                deptId = employeeList[_employeeIndex].Department;
+                ModelKeyStore.deptId= employeeList[_employeeIndex].Department;
                 return (true, employeeList[_employeeIndex]);
             }
             throw new EmpNotFound("Employee Not found with given Id");

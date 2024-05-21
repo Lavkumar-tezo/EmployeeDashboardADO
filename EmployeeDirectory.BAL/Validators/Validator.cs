@@ -214,7 +214,7 @@ namespace EmployeeDirectory.BAL.Validators
             }
             else
             {
-                deptId=deptList.FirstOrDefault(x=> x.Value == EmployeeProvider.deptId).Key;                
+                deptId=deptList.FirstOrDefault(x=> x.Value == ModelKeyStore.deptId).Key;                
             }
             List<Role> selectedRoles = _role.GetRolesByDept(deptId);
             string roleNames = "";
