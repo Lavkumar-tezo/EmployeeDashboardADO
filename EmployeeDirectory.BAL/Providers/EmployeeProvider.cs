@@ -9,19 +9,19 @@ using EmployeeDirectory.DAL.Models;
 
 namespace EmployeeDirectory.BAL.Providers
 {
-    public class EmployeeProvider(IGetProperty prop, IEmployeeOperations employeeOperations,IGetProjectDeptList list,IRoleProvider role) : IEmpProvider
+    public class EmployeeProvider(IGetProperty prop, IEmployeeRepository employeeOperations,IGetProjectDeptList list,IRoleProvider role) : IEmpProvider
     {
         private readonly IGetProperty _getProperty = prop;
-        private static int employeeIndex;
-        public static string employeeId = "";
+        private static int _employeeIndex;
+        private static string _employeeId = "";
         public static string deptId = "";
-        private readonly IEmployeeOperations _employeeOperations=employeeOperations;
+        private readonly IEmployeeRepository _employeeOperations =employeeOperations;
         private readonly IGetProjectDeptList _employeeDeptList=list;
         private readonly IRoleProvider _role = role;
 
         public DTO.Employee AddValueToEmp(Dictionary<string, string> values, string mode)
         {
-            if (mode.Equals("Add"))
+            if (string.Equals("Add",mode))
             {
                 DTO.Employee newEmp = new()
                 {
@@ -42,7 +42,7 @@ namespace EmployeeDirectory.BAL.Providers
             else
             {
                 (bool check,Employee emp) = GetEmployeeById(values["Id"]);
-                AssignIdToKeys(emp);
+                AssignIdToModel(emp);
                 DTO.Employee updateEmp = new()
                 {
                     FirstName = (values["FirstName"].IsEmpty()) ? emp.FirstName : values["FirstName"],
@@ -73,7 +73,7 @@ namespace EmployeeDirectory.BAL.Providers
             }
         }
 
-        public void AssignIdToKeys(Employee emp)
+        public void AssignIdToModel(Employee emp)
         {
             Dictionary<string, string> deptList = _employeeDeptList.GetList("Department");
             Dictionary<string, string> projectList = _employeeDeptList.GetList("Project");
@@ -108,13 +108,13 @@ namespace EmployeeDirectory.BAL.Providers
 
         public Employee AssignValueToModel(DTO.Employee emp)
         {
-            if (employeeId.IsEmpty())
+            if (_employeeId.IsEmpty())
             {
-                employeeId = GenerateEmpId();
+                _employeeId = GenerateEmpId();
             }
             Employee newEmp = new()
             {
-                Id = employeeId,
+                Id = _employeeId,
                 FirstName = emp.FirstName,
                 LastName = emp.LastName,
                 Location = emp.Location,
@@ -132,119 +132,60 @@ namespace EmployeeDirectory.BAL.Providers
 
         public void AddEmployee(DTO.Employee employee)
         {
-            try
-            {
-               _employeeOperations.AddEmployee(AssignValueToModel(employee));
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _employeeOperations.AddEmployee(AssignValueToModel(employee));
         }
 
         public List<Employee> GetEmployees()
         {
-            try
-            {
-               return _employeeOperations.GetEmployees();
-            }
-            catch (IOException)
-            {
-                throw;
-            }
-
+            return _employeeOperations.GetEmployees();
         }
 
         public (bool, Employee) GetEmployeeById(string id)
         {
             id = id.ToUpper();
-            try
+            List<Employee> employeeList = GetEmployees();
+            _employeeIndex = employeeList.FindIndex(emp => emp.Id == id);
+            if (_employeeIndex != -1)
             {
-                List<Employee> employeeList = GetEmployees();
-                employeeIndex = employeeList.FindIndex(emp => emp.Id == id);
-                if (employeeIndex != -1)
-                {
-                    employeeId = employeeList[employeeIndex].Id;
-                    deptId = employeeList[employeeIndex].Department;
-                    return (true, employeeList[employeeIndex]);
-                }
-                throw new EmpNotFound("Employee Not found with given Id");
+                _employeeId = employeeList[_employeeIndex].Id;
+                deptId = employeeList[_employeeIndex].Department;
+                return (true, employeeList[_employeeIndex]);
             }
-            catch (EmpNotFound)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            throw new EmpNotFound("Employee Not found with given Id");
 
         }
 
         public bool IsEmployeePresent(string id)
         {
-            try
-            {
-                (bool check, Employee employee) = GetEmployeeById(id);
-                MessagesInputStore.inputFieldValues=_getProperty.GetValueFromObject(employee);
-                return check;
-            }
-            catch (EmpNotFound)
-            {
-                throw;
-            }
-            catch (Exception)
-            {
-                throw;
-            }
-
+            (bool check, Employee employee) = GetEmployeeById(id);
+            MessagesInputStore.inputFieldValues = _getProperty.GetValueFromObject(employee);
+            return check;
         }
 
         public void UpdateEmployee(DTO.Employee employee)
         {
-            try
-            {
-                _employeeOperations.UpdateEmployee(AssignValueToModel(employee));
-            }
-            catch (IOException)
-            {
-                throw;
-            }
+            _employeeOperations.UpdateEmployee(AssignValueToModel(employee));
 
         }
 
         public void DeleteEmployee(string id)
         {
-            try
-            {
-               _employeeOperations.DeleteEmployee(id);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            _employeeOperations.DeleteEmployee(id);
 
         }
 
         public string GenerateEmpId()
         {
-            try
+            List<Employee> employees = _employeeOperations.GetEmployees();
+            if (employees.Count == 0)
             {
-                List<Employee> employees = _employeeOperations.GetEmployees();
-                if(employees.Count==0)
-                {
-                    return "TZ0001";
-                }
-                string LastEmpId = employees.Last().Id;
-                int lastEmpNumber = int.Parse(LastEmpId[2..]);
-                lastEmpNumber++;
-                string newId = "TZ" + lastEmpNumber.ToString("D4");
-                return newId;
+                return "TZ0001";
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            string LastEmpId = employees.Last().Id;
+            int lastEmpNumber = int.Parse(LastEmpId[2..]);
+            lastEmpNumber++;
+            string newId = "TZ" + lastEmpNumber.ToString("D4");
+            return newId;
         }
 
     }

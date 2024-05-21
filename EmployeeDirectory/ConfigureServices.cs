@@ -3,16 +3,18 @@ using EmployeeDirectory.BAL.Interfaces;
 using EmployeeDirectory.BAL.Providers;
 using EmployeeDirectory.BAL.Validators;
 using EmployeeDirectory.DAL.Contracts.Providers;
-using EmployeeDirectory.DAL.DataOperations;
+using EmployeeDirectory.DAL.Repositories;
 using EmployeeDirectory.BAL.Interfaces.Views;
 using EmployeeDirectory.DAL.Connections;
+using Microsoft.Extensions.Configuration;
 namespace EmployeeDirectory
 {
     public class ConfigureServices
     {
         public static IServiceProvider BuildServices()
         {
-            string connectionString = @"Server=SQL-DEV;Database=LavDB_ADO;Trusted_Connection=True;TrustServerCertificate=True";
+            var configBuilder = new ConfigurationBuilder().AddJsonFile("app-settings.json").Build();
+            string connectionString = configBuilder["connection:sql"]!;
             var services = new ServiceCollection();
 
             services.AddScoped<IEmployeeView, Views.Employee>();
@@ -23,13 +25,10 @@ namespace EmployeeDirectory
             services.AddScoped<IGetProjectDeptList, GetProjectDeptList>();
             services.AddScoped<IGetProperty, GetProperty>();
             services.AddScoped<IRoleProvider, RoleProvider>();
-            services.AddScoped<IRoleOperations, RoleOperations>();
-            services.AddScoped<IEmployeeOperations, EmployeeOperations>();
-            services.AddSingleton<IDBConnection>(new DBConnection(connectionString));
-            //services.AddScoped<IDBConnection>(provider => new DBConnection(connectionString));
-            services.AddScoped<IDeptProjectOperations, DeptProjectOperations>();
-            //services.AddScoped<IDataProvider, DataOperations>();
-           // services.AddScoped<DataOperations>();
+            services.AddScoped<IRoleRepository, RoleRepository>();
+            services.AddScoped<IEmployeeRepository, EmployeeRepository>();
+            services.AddScoped<IDbConnection>(provider => new DbConnection(connectionString));
+            services.AddScoped<IGenericRepository, GenericRepository>();
             services.AddScoped<MainMenu>();
 
             return services.BuildServiceProvider();

@@ -5,7 +5,6 @@ using EmployeeDirectory.BAL.Interfaces;
 using EmployeeDirectory.BAL.Helper;
 using EmployeeDirectory.BAL.Extension;
 using EmployeeDirectory.DAL.Models;
-using Newtonsoft.Json.Linq;
 using EmployeeDirectory.BAL.Providers;
 namespace EmployeeDirectory.BAL.Validators
 {
@@ -70,15 +69,8 @@ namespace EmployeeDirectory.BAL.Validators
 
         public static int ValidateOption(string value)
         {
-            try
-            {
-                int option = Convert.ToInt32(value);
-                return option;
-            }
-            catch (FormatException)
-            {
-                throw;
-            }
+            int option = Convert.ToInt32(value);
+            return option;
         }
 
 
@@ -152,26 +144,13 @@ namespace EmployeeDirectory.BAL.Validators
             {
                 return (false, "select valid department first for adding role");
             }
-            try
+            List<Role> roles = _role.GetRolesByDept(MessagesInputStore.inputFieldValues["Department"]);
+            roles = (from role in roles where role.Name.ToLower().Equals(value) select role).ToList();
+            if (roles.Count > 0)
             {
-                // _role.GetRolesByDept(deptId);
-                //List<DAL.Models.Role> roles = _role.GetRoles();
-                List<Role> roles = _role.GetRolesByDept(MessagesInputStore.inputFieldValues["Department"]);
-                roles = (from role in roles where role.Name.ToLower().Equals(value) select role).ToList();
-                if (roles.Count > 0)
-                {
-                    //if (MessagesInputStore.inputFieldValues.ContainsKey("JobTitle"))
-                    //{
-                    //    MessagesInputStore.inputFieldValues["JobTitle"] = roles[0].Id;
-                    //}
-                    return (false, "This role already exists in selected department");
-                }
-                return (true, "Role available");
+                return (false, "This role already exists in selected department");
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            return (true, "Role available");
 
         }
 
@@ -264,28 +243,19 @@ namespace EmployeeDirectory.BAL.Validators
                 return true;
             }
             string roleNames = "";
-            try
+            foreach (KeyValuePair<string, string> item in deptlist)
             {
-                foreach (KeyValuePair<string, string> item in deptlist)
+                if (item.Value.ToLower().Equals(value.ToLower()))
                 {
-                    if (item.Value.ToLower().Equals(value.ToLower()))
-                    {
-                        MessagesInputStore.inputFieldValues[key] = item.Key;
-                        MessagesInputStore.validationMessages.Remove(key);
-                        return true;
-                    }
+                    MessagesInputStore.inputFieldValues[key] = item.Key;
+                    MessagesInputStore.validationMessages.Remove(key);
+                    return true;
                 }
-                string message = $"Selected {key} Not Found in selected department. Choose from these: {roleNames}";
-                message += string.Join(", ", deptlist.Values);
-                MessagesInputStore.validationMessages[key] = message;
-                return false;
-
-
             }
-            catch (Exception)
-            {
-                throw;
-            }
+            string message = $"Selected {key} Not Found in selected department. Choose from these: {roleNames}";
+            message += string.Join(", ", deptlist.Values);
+            MessagesInputStore.validationMessages[key] = message;
+            return false;
         }
 
         public bool ValidateRole()

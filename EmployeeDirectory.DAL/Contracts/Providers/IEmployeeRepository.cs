@@ -3,7 +3,7 @@
 
 namespace EmployeeDirectory.DAL.Contracts.Providers
 {
-    public interface IEmployeeOperations
+    public interface IEmployeeRepository
     {
         public List<Employee> GetEmployees();
 

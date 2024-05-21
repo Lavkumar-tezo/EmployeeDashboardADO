@@ -3,14 +3,9 @@ using Microsoft.Data.SqlClient;
 
 namespace EmployeeDirectory.DAL.Connections
 {
-    public class DBConnection:IDBConnection
+    public class DbConnection(string connectionString) : IDbConnection
     {
-        private readonly string _connectionString;
-
-        public DBConnection(string connectionString)
-        {
-            this._connectionString = connectionString;
-        }
+        private readonly string _connectionString = connectionString;
 
         public SqlConnection GetConnection()
         {

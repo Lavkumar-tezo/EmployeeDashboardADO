@@ -2,7 +2,7 @@
 
 namespace EmployeeDirectory.DAL.Contracts.Providers
 {
-    public interface IRoleOperations
+    public interface IRoleRepository
     {
         public List<Role> GetRoles();
 

@@ -1,22 +1,14 @@
 ﻿using EmployeeDirectory.BAL.Interfaces;
 using EmployeeDirectory.DAL.Contracts.Providers;
-using EmployeeDirectory.DAL.Models;
 namespace EmployeeDirectory.BAL.Providers
 {
-    public class GetProjectDeptList(IDeptProjectOperations data):IGetProjectDeptList
+    public class GetProjectDeptList(IGenericRepository data):IGetProjectDeptList
     {
-        private readonly IDeptProjectOperations _deptProjectOperations = data;
+        private readonly IGenericRepository _deptProjectOperations = data;
 
         public Dictionary<string, string> GetList(string tableName)
         {
-            try
-            {
-                return _deptProjectOperations.GetDepartments(tableName);
-            }
-            catch (Exception)
-            {
-                throw;
-            }
+            return _deptProjectOperations.GetList(tableName);
         }
     }
 }

@@ -2,7 +2,7 @@
 
 namespace EmployeeDirectory.DAL.Contracts.Providers
 {
-    public interface IDBConnection
+    public interface IDbConnection
     {
         public SqlConnection GetConnection();
     }
